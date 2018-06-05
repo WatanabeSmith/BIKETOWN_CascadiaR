@@ -1,11 +1,13 @@
-# BIKETOWN_CascadiaR
-Visualization of BIKETOWN data for CascadiaRConference 2018
-
-![Final Visualization](https://raw.githubusercontent.com/WatanabeSmith/BIKETOWN_CascadiaR/master/Biketown_trajectories_WatanabeSmith.png "Submission visualization of Biketown data for CascadiaRConf 2018")
-
-Code in BikeTown_cRaggy_visualization_KWS.Rmd  
-HTML of knitted code and output in BikeTown_cRaggy_visualization_KWS.html
-
+---
+title: "BikeTown visualization (CascadiaRConf 2018)"
+author: "Kevin Watanabe-Smith"
+date: "2018-06-05"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    keep_md: true
+---
 
 # Data Loading
 
@@ -39,13 +41,13 @@ library(lubridate)
 ```
 
 ```
-##
+## 
 ## Attaching package: 'lubridate'
 ```
 
 ```
 ## The following object is masked from 'package:base':
-##
+## 
 ##     date
 ```
 
@@ -95,7 +97,7 @@ filelist <- list.files("PublicTripData/Quarterly") # data as downloaded
 
 raw_bike <- data.frame()
 for(f in filelist) {
-  temp_bike <- read_csv(paste0("PublicTripData/Quarterly/", f)) %>%
+  temp_bike <- read_csv(paste0("PublicTripData/Quarterly/", f)) %>% 
     mutate(Duration = as.difftime(Duration)) #Necessary to fix a join issue with different csv's
   raw_bike <- raw_bike %>% bind_rows(temp_bike)
 }
@@ -349,9 +351,9 @@ for(f in filelist) {
 
 
 ```r
-bike_parsed <- raw_bike %>%
-  mutate(StartDate = mdy(StartDate)) %>%
-  mutate(start_wday = wday(StartDate, label = TRUE)) %>%
+bike_parsed <- raw_bike %>% 
+  mutate(StartDate = mdy(StartDate)) %>% 
+  mutate(start_wday = wday(StartDate, label = TRUE)) %>% 
   mutate(weekend = case_when(
     str_detect(start_wday, "Sun|Sat") ~ "Weekend",
     TRUE ~ "Weekday"))
@@ -392,7 +394,7 @@ summary(bike_parsed)
 ##                                       3rd Qu.: 7154                     
 ##                                       Max.   :19237                     
 ##                                                                         
-##  Distance_Miles       Duration        RentalAccessPath   MultipleRental
+##  Distance_Miles       Duration        RentalAccessPath   MultipleRental 
 ##  Min.   :   0.000   Length:519500     Length:519500      Mode :logical  
 ##  1st Qu.:   0.760   Class1:hms        Class :character   FALSE:482833   
 ##  Median :   1.390   Class2:difftime   Mode  :character   TRUE :36667    
@@ -427,7 +429,7 @@ compass_df <- data.frame(card_dir = c("N", "NE", "E","SE",
                                       "#FC4C02",
                                       "#82ef31",
                                       "#1eca32",
-                                      "#38e8e5",
+                                      "#38e8e5", 
                                       "#c504f6", #"#0c8cf5", #"#0452f6",
                                       "#0c8cf5", #"#9903fc", #"#6619c8",
                                       "#e216a2"))
@@ -438,7 +440,7 @@ ggplot(compass_df, aes(x = x, y = y, color = hexcolor)) +
   geom_segment(aes(x = 0, y = 0, xend = x, yend = y),
                size = 2, arrow = arrow()) +
   geom_point(aes(x = 0, y = 0), size = 5, color = "white") +
-  theme(legend.position = "none",
+  theme(legend.position = "none", 
         panel.background = element_blank()) +
   coord_fixed(ratio = 1)
 ```
@@ -456,7 +458,7 @@ ggplot(compass_df, aes(x = x, y = y, color = hexcolor)) +
                              angle = 3)) +
   geom_point(aes(x = 0, y = 0), size = 18, color = "white") +
   #geom_text() +
-  theme(legend.position = "none",
+  theme(legend.position = "none", 
         panel.background = element_blank()) +
   coord_fixed(ratio = 1)
 ```
@@ -475,15 +477,15 @@ Round starting latitude/longitudes to nearest 2/100th (0.002, 0.004, 0.006, etc)
 
 
 ```r
-bikegps <- bike_parsed %>%
+bikegps <- bike_parsed %>% 
   filter(!is.na(StartLatitude) &
            !is.na(StartLongitude) &
            !is.na(EndLatitude) &
-           !is.na(EndLongitude)) %>%
-  mutate(d_lat = EndLatitude - StartLatitude) %>%
-  mutate(d_lon = EndLongitude - StartLongitude) %>%
+           !is.na(EndLongitude)) %>% 
+  mutate(d_lat = EndLatitude - StartLatitude) %>% 
+  mutate(d_lon = EndLongitude - StartLongitude) %>% 
   mutate(r_start_lat = round( #round off to 0.002, 0.004, 0.006 etc...
-    StartLatitude * 5, 2) /5) %>%
+    StartLatitude * 5, 2) /5) %>% 
   mutate(r_start_lon = round( #round off to 0.002, 0.004, 0.006 etc...
     StartLongitude * 5, 2) /5)
 ```
@@ -494,15 +496,15 @@ For bikes starting within a one-block radius, find the median change in latitude
 
 
 ```r
-gps_sum <- bikegps %>%
-  filter(!is.na(r_start_lat)) %>%
-  group_by(r_start_lat, r_start_lon) %>%
-  summarise(rides = n(), d_lat = median(d_lat), d_lon = median(d_lon)) %>%
-  ungroup() %>%
+gps_sum <- bikegps %>% 
+  filter(!is.na(r_start_lat)) %>% 
+  group_by(r_start_lat, r_start_lon) %>% 
+  summarise(rides = n(), d_lat = median(d_lat), d_lon = median(d_lon)) %>% 
+  ungroup() %>% 
   filter(rides >= 10)
 
-ggplot(gps_sum, aes(x = r_start_lon, y = r_start_lat)) +
-  geom_point(alpha = 0.2) +
+ggplot(gps_sum, aes(x = r_start_lon, y = r_start_lat)) + 
+  geom_point(alpha = 0.2) + 
   geom_segment(aes(xend = r_start_lon + 0.25*d_lon, yend = r_start_lat + 0.25*d_lat), arrow = arrow(length = unit(0.1, "inches"))) +
   coord_cartesian(xlim = c(-122.7, -122.62), ylim = c(45.49, 45.56))
 ```
@@ -518,7 +520,7 @@ ggplot(gps_sum, aes(x = r_start_lon, y = r_start_lat)) +
 
 
 ```r
-tod_bike <- bikegps %>%
+tod_bike <- bikegps %>% 
   mutate(time_of_day = factor(case_when(
     between(hour(StartTime), 4, 9) ~ "Morning", #When the hour position of the start time is >= 4 and <= 9, call "Morning"
     between(hour(StartTime), 10, 15) ~ "Midday",
@@ -533,9 +535,9 @@ summary(tod_bike$time_of_day)
 ```
 
 ```
-## Late Night (10pm-4am)    Morning (4am-10am)     Midday (10am-4pm)
-##                 35388                 74171                208377
-##    Evening (4pm-10pm)
+## Late Night (10pm-4am)    Morning (4am-10am)     Midday (10am-4pm) 
+##                 35388                 74171                208377 
+##    Evening (4pm-10pm) 
 ##                201144
 ```
 
@@ -545,9 +547,9 @@ Group data by starting point, time of day, and weekday/weekend status. Calculate
 
 
 ```r
-tod_bike_sum <- tod_bike %>%
-  group_by(r_start_lat, r_start_lon, time_of_day, weekend) %>%
-  summarise(rides = n(), d_lat = median(d_lat), d_lon = median(d_lon)) %>%
+tod_bike_sum <- tod_bike %>% 
+  group_by(r_start_lat, r_start_lon, time_of_day, weekend) %>% 
+  summarise(rides = n(), d_lat = median(d_lat), d_lon = median(d_lon)) %>% 
   filter(rides >= 10)
 ```
 
@@ -557,7 +559,7 @@ Determine primary cardinal/ordinal direction (N, NE, E, SE, S, SW, W, NW) for th
 
 
 ```r
-tod_card <- tod_bike_sum %>%
+tod_card <- tod_bike_sum %>% 
   #atan2(y, x) gives the angle of a point relative to the origin in radians
   #atan2(y, x) * 180 / pi gives the angle in degrees
   #a flat line to the right ("east") is 0, up ("north") is 90, down ("south") is -90, and left ("west") is 180/-180
@@ -570,7 +572,7 @@ tod_card <- tod_bike_sum %>%
     d_angle <= -157.5 | d_angle > 157.5 ~ "W",
     d_angle <=  157.5 & d_angle > 112.5 ~ "NW",
     d_angle <= 112.5 & d_angle > 67.5 ~ "N",
-    d_angle <= 67.5 & d_angle > 22.5 ~ "NE")) %>%
+    d_angle <= 67.5 & d_angle > 22.5 ~ "NE")) %>% 
   left_join(compass_df, by = "card_dir")
 ```
 
@@ -669,7 +671,7 @@ ggmap(custompdxmap,
                inherit.aes = FALSE) +
   # Draw every given line/arrow
   geom_segment(size = 0.5,
-               arrow = arrow(length = unit(0.1, "inches"),
+               arrow = arrow(length = unit(0.1, "inches"), 
                              angle = 20)) +
   # Set the colors to exactly as given in the dataset
   scale_color_identity() +
@@ -691,12 +693,12 @@ ggmap(custompdxmap,
     # "inhterit.aes = FALSE" is essential for this to plot, given global aesthetics
     inherit.aes = FALSE,
     family = "Arial") +
-
+  
   # Wrap data by portion of day
   facet_wrap(~time_of_day) +
-
+  
   # Draw compass rose
-  geom_segment(data = compass_df,
+  geom_segment(data = compass_df, 
                 # "inhterit.aes = FALSE" is essential for this to plot, given global aesthetics
                inherit.aes = FALSE,
                # The coordinates for the compass rose are set relative to an empirically chosen point in the upper-right
@@ -712,7 +714,7 @@ ggmap(custompdxmap,
                              angle = 8)) +
   # Off-White dot at center of compass rose, also obscures overlap of different colors
   geom_point(aes(x = -122.624, y = 45.553), size = 8, color = medbkgd) +
-
+  
   # Set colors and text to mimic BIKETOWN branding
   theme(strip.background = element_rect(fill = darkgray),
         strip.text = element_text(color = bikeorange, face = "bold",
@@ -724,7 +726,7 @@ ggmap(custompdxmap,
         plot.subtitle = element_text(size = 12, family = "Arial",
                                      hjust = 0.5),
         plot.caption = element_text(size = 12, family = "Arial")) +
-
+  
   # Title, subtitle, caption
   labs(title = "AVERAGE BIKETOWN TRIPS",
        subtitle = "Median trajectory of weekday trips (2016-2018)",
@@ -751,7 +753,7 @@ ggsave("Biketown_trajectories_WatanabeSmith.png", height = 11.2, width = 15.4) #
 
 ```r
 # Saving pdf
-ggsave("Biketown_trajectories_WatanabeSmith.pdf", height = 11.2, width = 15.4,
+ggsave("Biketown_trajectories_WatanabeSmith.pdf", height = 11.2, width = 15.4, 
        # "device = cairo_pdf" fixes issue of fonts not appearing in PDF version
        device = cairo_pdf)
 ```
@@ -768,25 +770,25 @@ sessionInfo()
 ## R version 3.5.0 (2018-04-23)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
 ## Running under: Windows 10 x64 (build 17134)
-##
+## 
 ## Matrix products: default
-##
+## 
 ## locale:
-## [1] LC_COLLATE=English_United States.1252
+## [1] LC_COLLATE=English_United States.1252 
 ## [2] LC_CTYPE=English_United States.1252   
 ## [3] LC_MONETARY=English_United States.1252
 ## [4] LC_NUMERIC=C                          
 ## [5] LC_TIME=English_United States.1252    
-##
+## 
 ## attached base packages:
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
-##
+## 
 ## other attached packages:
-##  [1] bindrcpp_0.2.2  extrafont_0.17  ggrepel_0.7.0   ggthemes_3.4.0
+##  [1] bindrcpp_0.2.2  extrafont_0.17  ggrepel_0.7.0   ggthemes_3.4.0 
 ##  [5] ggmap_2.7.900   lubridate_1.7.4 forcats_0.3.0   stringr_1.3.0  
 ##  [9] dplyr_0.7.4     purrr_0.2.4     readr_1.1.1     tidyr_0.8.0    
 ## [13] tibble_1.4.2    ggplot2_2.2.1   tidyverse_1.2.1
-##
+## 
 ## loaded via a namespace (and not attached):
 ##  [1] reshape2_1.4.3    haven_1.1.1       lattice_0.20-35  
 ##  [4] colorspace_1.3-2  htmltools_0.3.6   yaml_2.1.19      
